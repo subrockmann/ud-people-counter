@@ -4,7 +4,8 @@
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
- without limitation the rights to use, copy, modify, merge, publish,
+ withou
+ t limitation the rights to use, copy, modify, merge, publish,
  distribute, sublicense, and/or sell copies of the Software, and to
  permit person to whom the Software is furnished to do so, subject to
  the following conditions:
@@ -110,6 +111,11 @@ def infer_on_stream(args, client):
     ### TODO: Load the model through `infer_network` ###
     infer_network.load_model(args.model, args.device, args.cpu_extension)
     net_input_shape = infer_network.get_input_shape()
+    #print (net_input_shape)
+    net_output_shape = infer_network.get_output_shape()
+    #print (net_output_shape)
+    #net_output_keys = infer_network.get_output_keys()
+    #print (net_output_keys)
 
     ### TODO: Handle the input stream ###
     ### TODO: Read from the video capture ###
@@ -123,7 +129,7 @@ def infer_on_stream(args, client):
 
     # setup counter variables for statistics
     last_count = 0
-    total_count = 1
+    total_count = 0
     
     ### TODO: Loop until stream is over ###
     # Process frames until the video ends, or process is exited
@@ -148,6 +154,7 @@ def infer_on_stream(args, client):
 
         ### TODO: Wait for the result ###
         ### TODO: Get the output of inference
+        zero_detection = 0
         if infer_network.wait()== 0:
             result = infer_network.get_output()
             
@@ -164,14 +171,26 @@ def infer_on_stream(args, client):
             ### Topic "person": keys of "count" and "total" ###
             # A person enters the video
             if current_count > last_count:
-                #start_time = time.time()
-                total_count = total_count + current_count - last_count
+                start_time = time.time()
+                total_count = total_count + current_count - last_count  # due to weired GUI
                 client.publish("person", json.dumps({"total": total_count}))
+                zero_detection = 0
+
+            # Person duration in the video is calculated
+            if current_count < last_count:
+                if zero_detection > 5:
+                    duration = int(time.time() - start_time)
+                    # Publish messages to the MQTT server
+                    client.publish("person/duration",
+                                   json.dumps({"duration": duration}))
+                    zero_detection = 0
+                else:
+                    zero_detection +=1
                 
-            #client.publish("person", json.dumps({"total": total_count}))
-            ### Topic "person/duration": key of "duration" ###
+
             client.publish("person", json.dumps({"count": current_count}))
             last_count = current_count
+            
         ### TODO: Send the frame to the FFMPEG server ###
         # Send frame to the ffmpeg server
         sys.stdout.buffer.write(frame)  

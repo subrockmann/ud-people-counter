@@ -87,7 +87,15 @@ class Network:
     def get_input_shape(self):
         ### TODO: Return the shape of the input layer ###
         return self.network.inputs[self.input_blob].shape
+    
+    def get_output_shape(self):
+        ### TODO: Return the shape of the output layer ###
+        return self.network.outputs[self.output_blob].shape
 
+    def get_output_keys(self):
+        ### TODO: Return the shape of the output layer ###
+        return self.output_blob.keys()
+    
     def exec_net(self, image):
         ### TODO: Start an asynchronous request ###
         '''
