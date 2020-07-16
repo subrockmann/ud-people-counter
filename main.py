@@ -27,6 +27,7 @@ import time
 import socket
 import json
 import cv2
+import time
 
 import logging as log
 import paho.mqtt.client as mqtt
@@ -103,6 +104,9 @@ def infer_on_stream(args, client):
     :param client: MQTT client
     :return: None
     """
+    
+    log.basicConfig(filename='debug.log',level=log.DEBUG)
+    
     # Initialise the class
     infer_network = Network()
     # Set Probability threshold for detections
@@ -111,7 +115,7 @@ def infer_on_stream(args, client):
     ### TODO: Load the model through `infer_network` ###
     infer_network.load_model(args.model, args.device, args.cpu_extension)
     net_input_shape = infer_network.get_input_shape()
-    #print (net_input_shape)
+    log.info("Input shape: " + str(net_input_shape))
     net_output_shape = infer_network.get_output_shape()
     #print (net_output_shape)
     #net_output_keys = infer_network.get_output_keys()
@@ -161,6 +165,7 @@ def infer_on_stream(args, client):
 
         ### TODO: Start asynchronous inference for specified request ###
         ### TODO: Perform inference on the frame
+        start_time = time.time()
         infer_network.exec_net(p_frame)
 
         ### Wait for the result and get the output of the inference ###
@@ -168,6 +173,8 @@ def infer_on_stream(args, client):
         zero_detection = 0
         if infer_network.wait()== 0:
             result = infer_network.get_output()
+            duration = time.time()- start_time
+            log.info("Frame: "+ str(frame_count) + " - inference time: " + str(duration))
 
             ### Get the results of the inference request ###
             frame, current_count = draw_boxes(frame, result, args, width, height)
