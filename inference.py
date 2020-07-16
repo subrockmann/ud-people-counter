@@ -74,9 +74,8 @@ class Network:
             #print("Unsupported layers found: {}".format(unsupported_layers))
             #print("Check whether extensions are available to add to IECore.")
             exit(1)
-
-
-        #print("IR successfully loaded into Inference Engine.")
+            
+        # print("IR successfully loaded into Inference Engine.")  # print statements cause problems with the ffmpeg display
 
         # Get the input layer
         self.input_blob = next(iter(self.network.inputs))

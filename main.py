@@ -127,9 +127,20 @@ def infer_on_stream(args, client):
     width = int(cap.get(3))
     height = int(cap.get(4))
 
+    
     # setup counter variables for statistics
     last_count = 0
+    report_count = 0
     total_count = 0
+ 
+    duration = 0
+    duration_prev = 0
+
+    frame_count = 0
+    frame_count_prev = 0
+    frame_threshold = 20
+    
+    
     
     ### TODO: Loop until stream is over ###
     # Process frames until the video ends, or process is exited
@@ -152,45 +163,48 @@ def infer_on_stream(args, client):
         ### TODO: Perform inference on the frame
         infer_network.exec_net(p_frame)
 
-        ### TODO: Wait for the result ###
-        ### TODO: Get the output of inference
+        ### Wait for the result and get the output of the inference ###
+
         zero_detection = 0
         if infer_network.wait()== 0:
             result = infer_network.get_output()
-            
-            ####
-            #print(result)
-            ### TODO: Get the results of the inference request ###
+
+            ### Get the results of the inference request ###
             frame, current_count = draw_boxes(frame, result, args, width, height)
             #print(current_count)
 
             ### TODO: Extract any desired stats from the results ###
-
             ### TODO: Calculate and send relevant information on ###
             ### current_count, total_count and duration to the MQTT server ###
             ### Topic "person": keys of "count" and "total" ###
-            # A person enters the video
-            if current_count > last_count:
-                start_time = time.time()
-                total_count = total_count + current_count - last_count  # due to weired GUI
-                client.publish("person", json.dumps({"total": total_count}))
-                zero_detection = 0
 
-            # Person duration in the video is calculated
-            if current_count < last_count:
-                if zero_detection > 5:
-                    duration = int(time.time() - start_time)
-                    # Publish messages to the MQTT server
-                    client.publish("person/duration",
-                                   json.dumps({"duration": duration}))
-                    zero_detection = 0
+            if current_count != report_count:
+                last_count = report_count
+                report_count = current_count
+                if frame_count >=frame_threshold:
+                    frame_count_prev = frame_count
+                    frame_count = 0
                 else:
-                    zero_detection +=1
-                
+                    frame_count = frame_count_prev+ frame_count
+                    frame_count_prev = 0
 
-            client.publish("person", json.dumps({"count": current_count}))
-            last_count = current_count
-            
+            # A person enters the video
+            else:
+                frame_count +=1
+                if frame_count >=frame_threshold:
+                    
+                    if frame_count ==frame_threshold and current_count > last_count:
+                        start_time = time.time()
+                        total_count = total_count + current_count - last_count  # due to weired GUI
+                        client.publish("person", json.dumps({"total": total_count}))
+                        client.publish("person", json.dumps({"count": current_count}))
+
+                    elif frame_count ==frame_threshold and current_count < last_count:
+                        # Person duration in the video is calculated
+                        duration = int(time.time() - start_time)
+                        client.publish("person/duration", json.dumps({"duration": duration}))
+                        client.publish("person", json.dumps({"count": current_count}))
+                        
         ### TODO: Send the frame to the FFMPEG server ###
         # Send frame to the ffmpeg server
         sys.stdout.buffer.write(frame)  
