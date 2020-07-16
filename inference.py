@@ -42,25 +42,23 @@ class Network:
         self.output_blob = None
         self.exec_network = None
         self.infer_request = None
+        self.model = None
 
     def load_model(self, model, device="CPU", cpu_extension=None):
         ### TODO: Load the model ###
+        self.model = model
         model_xml = model
         model_bin = os.path.splitext(model_xml)[0] + ".bin"
         
         # Initialize the plugin
         self.plugin = IECore()
         # Read the IR as a IENetwork
-
-
-        self.network = self.plugin.read_network(model=model_xml, weights=model_bin)
-        #self.network = IENetwork(model=model_xml, weights=model_bin)
+        self.network = IENetwork(model=model_xml, weights=model_bin)
         
         
         ### TODO: Add any necessary extensions ###
         if cpu_extension and "CPU" in device:
-            pass
-            #self.plugin.add_extension(cpu_extension, device)
+            self.plugin.add_extension(cpu_extension, device)
         ### TODO: Return the loaded inference plugin ###
         # Load the IENetwork into the plugin
         self.exec_network = self.plugin.load_network(self.network, device)
@@ -78,9 +76,8 @@ class Network:
             #print("Unsupported layers found: {}".format(unsupported_layers))
             #print("Check whether extensions are available to add to IECore.")
             exit(1)
-
-
-        #print("IR successfully loaded into Inference Engine.")
+            
+        # print("IR successfully loaded into Inference Engine.")  # print statements cause problems with the ffmpeg display
 
         # Get the input layer
         self.input_blob = next(iter(self.network.inputs))
@@ -90,7 +87,14 @@ class Network:
 
     def get_input_shape(self):
         ### TODO: Return the shape of the input layer ###
-        return self.network.inputs[self.input_blob].shape
+        #return self.network.inputs[self.input_blob].shape
+        input_shapes = {}
+        for network_input in self.network.inputs:
+            input_shapes[network_input] = (self.network.inputs[network_input].shape)
+        #print(input_shapes)
+        return input_shapes['image_tensor']
+
+        
     
     def get_output_shape(self):
         ### TODO: Return the shape of the output layer ###
@@ -100,19 +104,17 @@ class Network:
         ### TODO: Return the shape of the output layer ###
         return self.output_blob.keys()
     
-    def exec_net(self, net_inputs):
+    def exec_net(self, image):
         ### TODO: Start an asynchronous request ###
         '''
         Makes an asynchronous inference request, given an input image.
         '''
-        #inputs = {'image_tensor' : image,
-        #'image_info': (600, 600, 1)}             
-        #'image_info': (height, width, 1) } 
-
-
-        #self.exec_network.start_async(request_id=0, inputs=inputs)
-        self.exec_network.start_async(request_id=0, inputs=net_inputs)
-        #self.exec_network.start_async(request_id=0, inputs={self.input_blob: image})
+        if "faster" in str(self.model):
+            #print ("Faster rcnn!")
+            input_dict = {'image_tensor': image, 'image_info': image.shape[1:]}
+        else:
+            input_dict = {self.input_blob: image}
+        self.exec_network.start_async(request_id=0, inputs=input_dict)
         return
         ### TODO: Return any necessary information ###
         ### Note: You may need to update the function parameters. ###
