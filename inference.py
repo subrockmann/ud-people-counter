@@ -57,8 +57,8 @@ class Network:
         
         
         ### TODO: Add any necessary extensions ###
-        if cpu_extension and "CPU" in device:
-            self.plugin.add_extension(cpu_extension, device)
+        #if cpu_extension and "CPU" in device:
+        #    self.plugin.add_extension(cpu_extension, device)
         ### TODO: Return the loaded inference plugin ###
         # Load the IENetwork into the plugin
         self.exec_network = self.plugin.load_network(self.network, device)
