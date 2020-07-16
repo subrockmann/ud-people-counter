@@ -121,6 +121,10 @@ def infer_on_stream(args, client):
     #net_output_keys = infer_network.get_output_keys()
     #print (net_output_keys)
 
+     # Check if the input is from webcam, an image, or a video
+    if args.input == 'CAM':
+        args.input = 0
+
     ### TODO: Handle the input stream ###
     ### TODO: Read from the video capture ###
     # Get and open video capture
@@ -183,34 +187,35 @@ def infer_on_stream(args, client):
             ### TODO: Extract any desired stats from the results ###
             ### TODO: Calculate and send relevant information on ###
             ### current_count, total_count and duration to the MQTT server ###
-            ### Topic "person": keys of "count" and "total" ###
+            ### Topic "person": keys of "count" and "total" ##
 
-            if current_count != report_count:
-                last_count = report_count
+            # Only change the count if the same prediction has been made for frame_threshold frames
+            # all other predictions might be false positives or false negatives
+
+            if current_count != report_count:       # check if count has changed
+                last_count = report_count           
                 report_count = current_count
+
                 if frame_count >=frame_threshold:
                     frame_count_prev = frame_count
-                    frame_count = 0
+                    frame_count = 0                 # reset frame counter 
                 else:
                     frame_count = frame_count_prev+ frame_count
-                    frame_count_prev = 0
-
-            # A person enters the video
-            else:
-                frame_count +=1
-                if frame_count >=frame_threshold:
-                    
-                    if frame_count ==frame_threshold and current_count > last_count:
+            
+            else:                                               # count has not changed
+                frame_count += 1                                
+                if frame_count >=frame_threshold:               # nothing has changed for threshold number of frames
+                    report_count = current_count                # current count has been consistent and can be published
+                    if frame_count ==frame_threshold and current_count > last_count:  # person has entered the frame
                         start_time = time.time()
-                        total_count = total_count + current_count - last_count  # due to weired GUI
+                        total_count = total_count + current_count - last_count          # due to weired GUI
                         client.publish("person", json.dumps({"total": total_count}))
                         client.publish("person", json.dumps({"count": current_count}))
-
-                    elif frame_count ==frame_threshold and current_count < last_count:
-                        # Person duration in the video is calculated
+                    elif frame_count ==frame_threshold and current_count < last_count:  # person has definetly left the frame
                         duration = int(time.time() - start_time)
                         client.publish("person/duration", json.dumps({"duration": duration}))
                         client.publish("person", json.dumps({"count": current_count}))
+            
                         
         ### TODO: Send the frame to the FFMPEG server ###
         # Send frame to the ffmpeg server

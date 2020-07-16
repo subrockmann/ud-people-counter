@@ -73,11 +73,11 @@ class Network:
                 unsupported_layers.append(l)
         
         if len(unsupported_layers) != 0:
-            #print("Unsupported layers found: {}".format(unsupported_layers))
-            #print("Check whether extensions are available to add to IECore.")
+            log.error("Unsupported layers found: {}".format(unsupported_layers))
+            log.error("Check whether extensions are available to add to IECore.")
             exit(1)
             
-        # print("IR successfully loaded into Inference Engine.")  # print statements cause problems with the ffmpeg display
+        log.info("IR successfully loaded into Inference Engine.")  # print statements cause problems with the ffmpeg display
 
         # Get the input layer
         self.input_blob = next(iter(self.network.inputs))
