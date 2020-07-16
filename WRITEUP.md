@@ -4,40 +4,78 @@ You can use this document as a template for providing your project write-up. How
 have a different format you prefer, feel free to use it as long as you answer all required
 questions.
 
+## Model description SSD Mobilenet
+
+Model name: ssd_mobilenet_v2_coco_2018_03_29
+Model size before conversion: 67 MB
+Model size after conversion (.bin + .xml): 66 MB
+Inference time before conversion: 
+Inference time after conversion:
+
+Code for downloading the model:
+```
+wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz
+```
+
 ### Conversion of the model
+```
 python /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model models/ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb --tensorflow_object_detection_api_pipeline_config models/ssd_mobilenet_v2_coco_2018_03_29/pipeline.config --reverse_input_channels --tensorflow_use_custom_operations_config /opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
+```
+
+### How to run the app
+```
+python main.py -i resources/Pedestrian_Detect_2_1_1.mp4 -m models/ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.4 | ffmpeg -v warning -f rawvideo -pixel_format bgr24 -video_size 768x432 -framerate 24 -i - http://0.0.0.0:3004/fac.ffm
+```
+
+### Conclusion SSD Mobilenet
+The model has significant problems to detect the second person for long periods of time. Changing the probabiltiy threshold did not help to solve this problem. Therefore the model is not suitable for the application.
 
 
-### Convertion of ssd_inception
+## Model description SSD Inception
+
+Model name: ssd_inception_v2_coco_2018_01_28
+Model size before conversion: 98 MB
+Model size after conversion (.bin + .xml): 97 MB
+Inference time before conversion: 
+Inference time after conversion:
+
+Code for downloading the model:
+```
+wget http://download.tensorflow.org/models/object_detection/ssd_inception_v2_coco_2018_01_28.tar.gz
+```
+
+
+### Convertion of the model
+```
 python /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.pb --tensorflow_object_detection_api_pipeline_config models/ssd_inception_v2_coco_2018_01_28/pipeline.config --reverse_input_channels --tensorflow_use_custom_operations_config /opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/ssd_v2_support.json
-
-
-### Conversion fo the faster rcnn_inception model
-python /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model /home/workspace/models/faster_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.pb --tensorflow_object_detection_api_pipeline_config /home/workspace/models/faster_rcnn_inception_v2_coco_2018_01_28/pipeline.config --reverse_input_channels --tensorflow_use_custom_operations_config /opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/faster_rcnn_support.json
-
-
-### How to run the basic model
-python main.py -i resources/Pedestrian_Detect_2_1_1.mp4 -m models/ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.4
-
+```
 
 ### How to run the complete app
-python main.py -i resources/Pedestrian_Detect_2_1_1.mp4 -m models/ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.4 | ffmpeg -v warning -f rawvideo -pixel_format bgr24 -video_size 768x432 -framerate 24 -i - http://0.0.0.0:3004/fac.ffm
-
-
-### How to run the basic model --ssd inception
-python main.py -i resources/Pedestrian_Detect_2_1_1.mp4 -m models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.4
-
-
-### How to run the complete app --ssd inception
 python main.py -i resources/Pedestrian_Detect_2_1_1.mp4 -m models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.4 | ffmpeg -v warning -f rawvideo -pixel_format bgr24 -video_size 768x432 -framerate 24 -i - http://0.0.0.0:3004/fac.ffm
 
 
-### How to run the basic - faster_rcnn model
-python main.py -i resources/Pedestrian_Detect_2_1_1.mp4 -m models/faster_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.4
+## Model description
 
-### How to run the complete app - faster_rcnn
+Model name: faster_rcnn_inception_v2_coco_2018_01_28
+Model size before conversion: 55 MB
+Model size after conversion (.bin + .xml): 52 MB
+Inference time before conversion: 
+Inference time after conversion:
+
+Code for downloading the model:
+```
+wget http://download.tensorflow.org/models/object_detection/faster_rcnn_inception_v2_coco_2018_01_28.tar.gz
+```
+
+### Conversion fo the faster rcnn_inception model
+```
+python /opt/intel/openvino/deployment_tools/model_optimizer/mo.py --input_model /home/workspace/models/faster_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.pb --tensorflow_object_detection_api_pipeline_config /home/workspace/models/faster_rcnn_inception_v2_coco_2018_01_28/pipeline.config --reverse_input_channels --tensorflow_use_custom_operations_config /opt/intel/openvino/deployment_tools/model_optimizer/extensions/front/tf/faster_rcnn_support.json
+```
+
+### How to run the  app 
+```
 python main.py -i resources/Pedestrian_Detect_2_1_1.mp4 -m models/faster_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.xml -l /opt/intel/openvino/deployment_tools/inference_engine/lib/intel64/libcpu_extension_sse4.so -d CPU -pt 0.4 | ffmpeg -v warning -f rawvideo -pixel_format bgr24 -video_size 768x432 -framerate 24 -i - http://0.0.0.0:3004/fac.ffm
-
+```
 
 ## Explaining Custom Layers
 The openVINO toolkit supports different neural network layers for a variety of neural network frameworks. The supported layers for each framework can be found [here](https://docs.openvinotoolkit.org/latest/openvino_docs_MO_DG_prepare_model_Supported_Frameworks_Layers.html)
